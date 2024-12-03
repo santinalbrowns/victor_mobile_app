@@ -4,14 +4,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_tag/features/cart/cart_screen.dart';
 import 'package:flutter_tag/features/cart/model.dart';
+import 'package:flutter_tag/features/receipts/receipts_screen.dart';
 import 'package:flutter_tag/features/stores/store_screen.dart';
 import 'package:flutter_tag/services/auth_service.dart';
 import 'package:flutter_tag/shared/models/product.dart';
+import 'package:flutter_tag/shared/var.dart';
 import 'package:ndef/utilities.dart';
 import 'package:nfc_manager/nfc_manager.dart';
-import 'package:ndef/ndef.dart' as ndef;
 import 'package:http/http.dart' as http;
-import 'package:webview_flutter/webview_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,8 +21,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  NfcTag? _tag;
-
   int currentPageIndex = 0;
   final AuthService _authService = AuthService();
 
@@ -31,9 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late String paymentUrl;
 
-  void addToCart(String sku, double price, Product product) {
-    final cart = Cart(storeId: storeId, items: cartItems);
-
+  void addToCart(String sku, int price, Product product) {
     setState(() {
       // Check if the item already exists in the cart
       Item? existingItem = cartItems.firstWhere((item) => item.sku == sku,
@@ -55,14 +51,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void sendOrder() {
-    // Create a Cart instance
-    final cart = Cart(storeId: storeId, items: cartItems);
-
-    // Convert cart to JSON
-    final orderJson = cart.toJson();
-  }
-
   Future<void> createPaymentSession() async {
     final token = await _authService.getToken();
 
@@ -70,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://172.20.10.3:5000/customer/orders'),
+        Uri.parse("$apiUrl/customer/orders"),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token'
@@ -91,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final token = await _authService.getToken();
 
     final url = Uri.parse(
-        'http://172.20.10.3:5000/customer/products/$sku'); // Replace with your API endpoint
+        "$apiUrl/customer/products/$sku"); // Replace with your API endpoint
 
     final response = await http.get(
       url,
@@ -166,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             children: <Widget>[
                                               SafeArea(
                                                 child: Image.network(
-                                                  "http://172.20.10.3:5000/images/${snapshot.data!.image}",
+                                                  "$apiUrl/images/${snapshot.data!.image}",
                                                   fit: BoxFit.cover,
                                                 ),
                                               )
@@ -283,13 +271,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                           onTap: () {
                                             Navigator.pop(context);
 
-                                            addToCart(snapshot.data!.sku, 10000,
+                                            addToCart(
+                                                snapshot.data!.sku,
+                                                snapshot.data!.price,
                                                 snapshot.data!);
                                           },
                                           child: Row(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.center,
                                             children: [
+                                              Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text("Total Price"),
+                                                  Text(
+                                                    "K${snapshot.data!.price}",
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 22,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(width: 60),
                                               Expanded(
                                                 child: Container(
                                                   decoration: BoxDecoration(
@@ -367,46 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
               StoreFinder(),
 
               /// Messages page
-              ListView.builder(
-                reverse: true,
-                itemCount: 2,
-                itemBuilder: (BuildContext context, int index) {
-                  if (index == 0) {
-                    return Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        margin: const EdgeInsets.all(8.0),
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Text(
-                          'Hello',
-                          style: theme.textTheme.bodyLarge!
-                              .copyWith(color: theme.colorScheme.onPrimary),
-                        ),
-                      ),
-                    );
-                  }
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.all(8.0),
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Text(
-                        'Hi!',
-                        style: theme.textTheme.bodyLarge!
-                            .copyWith(color: theme.colorScheme.onPrimary),
-                      ),
-                    ),
-                  );
-                },
-              ),
+              const ReceiptsScreen(),
             ][currentPageIndex];
           }
           return const Center(

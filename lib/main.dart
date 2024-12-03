@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tag/features/auth/signup_screen.dart';
 import 'package:flutter_tag/features/home/home_screen.dart';
+import 'package:flutter_tag/features/receipts/receipt_screen.dart';
 import 'package:flutter_tag/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,6 +41,13 @@ class MyApp extends StatelessWidget {
             redirect: (context, state) async {
               final isAuthenticated = await _authService.isAuthenticated();
               return isAuthenticated ? null : '/login';
+            },
+          ),
+          GoRoute(
+            path: '/receipts/:orderId',
+            builder: (context, state) {
+              final orderId = state.pathParameters['orderId'];
+              return ReceiptScreen(orderId: orderId!);
             },
           ),
         ],

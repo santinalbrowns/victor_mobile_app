@@ -7,6 +7,7 @@ class Product {
   final bool status;
   final bool visibility;
   final String? image;
+  final int price;
 
   Product({
     required this.id,
@@ -16,6 +17,7 @@ class Product {
     required this.categoryId,
     required this.status,
     required this.visibility,
+    required this.price,
     this.image,
   });
 
@@ -27,14 +29,14 @@ class Product {
     }
 
     return Product(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      sku: json['sku'],
-      categoryId: json['category_id'],
-      status: json['status'],
-      visibility: json['visibility'],
-      image: imageUrl,
-    );
+        id: json['id'],
+        name: json['name'],
+        description: json['description'],
+        sku: json['sku'],
+        categoryId: json['category_id'],
+        status: json['status'],
+        visibility: json['visibility'],
+        image: imageUrl,
+        price: json['price']);
   }
 }

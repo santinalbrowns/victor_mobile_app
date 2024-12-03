@@ -3,7 +3,7 @@ import 'package:flutter_tag/shared/models/product.dart';
 class Item {
   final String sku;
   int quantity;
-  final double price;
+  final int price;
 
   final Product product;
 

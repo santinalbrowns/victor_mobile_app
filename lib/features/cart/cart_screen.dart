@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_tag/features/cart/model.dart';
 import 'package:flutter_tag/services/auth_service.dart';
+import 'package:flutter_tag/shared/var.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -51,7 +53,7 @@ class _CartScreenState extends State<CartScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://172.20.10.3:5000/customer/orders'),
+        Uri.parse("$apiUrl/customer/orders"),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token'
@@ -72,11 +74,32 @@ class _CartScreenState extends State<CartScreen> {
             onPageFinished: (String url) {},
             //onHttpError: (HttpResponseError error) {},
             onWebResourceError: (WebResourceError error) {},
-            onNavigationRequest: (NavigationRequest request) {
-              if (request.url.startsWith('https://www.youtube.com/')) {
-                return NavigationDecision.prevent;
+            onNavigationRequest: (NavigationRequest request) async {
+              if (request.url.startsWith('http://172.20.10.3/success')) {
+                final uri = Uri.parse(request.url);
+                final orderId = uri.queryParameters['tx_ref'];
+
+                final url = Uri.parse(
+                    "$apiUrl/customer/orders/$orderId"); // Replace with your endpoint
+                try {
+                  final response = await http.put(url);
+
+                  if (response.statusCode == 200) {
+                    // ignore: use_build_context_synchronously
+                    context.go('/receipts/$orderId'); // Use GoRouter navigation
+                  } else {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Something went wrong")),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Something went wrong")),
+                  );
+                }
               }
-              return NavigationDecision.navigate;
+              return NavigationDecision.prevent;
             },
           ),
         )
@@ -238,7 +261,7 @@ class _CartScreenState extends State<CartScreen> {
                           );
                         },
                         leading: Image.network(
-                          "http://172.20.10.3:5000/thumbnails/${widget.items[index].product.image}",
+                          "$apiUrl/thumbnails/${widget.items[index].product.image}",
                           width: 45,
                           height: 45,
                           fit: BoxFit.cover,
@@ -252,8 +275,7 @@ class _CartScreenState extends State<CartScreen> {
                         trailing: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            //TODO add product price
-                            Text("Unit price: K25,000"),
+                            Text("Unit price: ${widget.items[index].price}"),
                             Text("Quantity: ${widget.items[index].quantity}"),
                           ],
                         ),

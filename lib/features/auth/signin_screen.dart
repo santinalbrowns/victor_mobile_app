@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_tag/services/auth_service.dart';
+import 'package:flutter_tag/shared/var.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -20,8 +21,7 @@ class _SigninScreenState extends State<SigninScreen> {
   final AuthService _authService = AuthService();
 
   Future<void> login() async {
-    final url = Uri.parse(
-        'http://172.20.10.3:5000/auth/login'); // Replace with your endpoint
+    final url = Uri.parse("$apiUrl/auth/login"); // Replace with your endpoint
     try {
       final response = await http.post(
         url,
